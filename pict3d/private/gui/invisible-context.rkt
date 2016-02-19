@@ -58,9 +58,14 @@
                      [stretchable-width #f]
                      [stretchable-height #f]))
   (define canvas (new canvas% [parent frame] [style '(gl no-autoclear)] [gl-config config]))
-  (send frame show #t)
-  (send frame show #f)
-  (sleep/yield 1)
+  (unless (eq? 'macosx (system-type))
+    ;; Showing and hiding the frame may initialize the GL context
+    ;; on some platforms (but not OS X, where hiding destroys the
+    ;; context)
+    (send frame show #t)
+    (send frame show #f)
+    (flush-display)
+    (yield (system-idle-evt)))
   (define ctxt (send (send canvas get-dc) get-gl-context))
   (cond
     [(or (not ctxt) (not (send ctxt ok?)))
